@@ -5,11 +5,15 @@ const fs = require('fs');
 const path = require('path');
 
 const htmlFile = fs.readFileSync(path.join(__dirname, 'index.html'));
+const jsFile = fs.readFileSync(path.join(__dirname, 'script.js'));
 
 const server = http.createServer((req, res) => {
 	if (req.url === '/') {
 		res.writeHead(200, { 'Content-Type': 'text/html' });
 		res.end(htmlFile);
+	} else if (req.url === '/script.js') {
+		res.writeHead(200, { 'Content-Type': 'text/javascript' });
+		res.end(jsFile);
 	} else {
 		res.writeHead(404);
 		res.end('404 Not Found');
