@@ -24,7 +24,6 @@ wss.on('connection', (ws) => {
 	const cProcess = spawn('./build/main', [], { stdio: 'pipe' });
 
 	ws.on('message', (message) => {
-		gcc
 		const text = message.toString('utf8');
 		console.log('Received:', text);
 		cProcess.stdin.write(text);
