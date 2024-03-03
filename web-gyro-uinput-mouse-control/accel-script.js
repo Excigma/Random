@@ -8,8 +8,8 @@ const deviceOrientation = document.getElementById('deviceOrientation');
 const info = document.getElementById('info');
 
 let interval;
-let beta = 0, gamma = 0;
-let xAccel = 0, yAccel = 0;
+let lastTimestamp;
+let speedX = 0, speedY = 0;
 
 // Event listener for WebSocket open
 socket.addEventListener('open', (event) => {
@@ -17,12 +17,9 @@ socket.addEventListener('open', (event) => {
 	info.textContent = 'WebSocket connection opened';
 
 	interval = setInterval(() => {
-		// if (!beta || !gamma) return;
-		// socket.send(`${Math.round(gamma)} ${Math.round(beta)}\n`);
-
-		if (!xAccel || !yAccel) return;
-		socket.send(`${Math.round(xAccel)} ${Math.round(yAccel)}\n`);
-	}, 16);
+		if (!speedX || !speedY) return;
+		socket.send(`${Math.round(speedX)} ${Math.round(speedY)}\n`);
+	}, 16); // Adjust interval as needed
 });
 
 socket.addEventListener('message', (event) => {
@@ -42,18 +39,13 @@ socket.addEventListener('error', (error) => {
 	clearInterval(interval);
 });
 
-window.addEventListener('deviceorientation', (event) => {
-	beta = event.beta;
-	gamma = event.gamma;
-
-	console.log('Device motion:', beta, gamma);
-	deviceMotion.textContent = `Beta: ${beta}, Gamma: ${gamma}`;
-});
-
-window.addEventListener('devicemotion', (event) => {
-	xAccel = event.accelerationIncludingGravity.x * 10;
-	yAccel = event.accelerationIncludingGravity.y * 10;
-
-	console.log('Device motion:', xAccel, yAccel);
-	deviceOrientation.textContent = `X: ${xAccel}, Y: ${yAccel}`;
-});
+window.addEventListener('devicemotion', function (event) {
+	var currentTime = new Date().getTime();
+	if (lastTimestamp === undefined) {
+		lastTimestamp = new Date().getTime();
+		return;
+	}
+	speedX += event.acceleration.x / 1000 * ((currentTime - lastTimestamp) / 1000) / 3600;
+	speedY += event.acceleration.y / 1000 * ((currentTime - lastTimestamp) / 1000) / 3600;
+	lastTimestamp = currentTime;
+}, false);
