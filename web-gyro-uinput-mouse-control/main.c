@@ -122,12 +122,12 @@ int main()
 	}
 
 	char input_buffer[30];
-	int x_amount = 0, y_amount = 0;
+	int x_amount = 0, y_amount = 0, is_click = 0;
 
 	while (fgets(input_buffer, sizeof(input_buffer), stdin) != NULL)
 	{
 		// Parse input for x and y coordinates
-		if (sscanf(input_buffer, "%d %d", &x_amount, &y_amount) != 2)
+		if (sscanf(input_buffer, "%d %d %d", &x_amount, &y_amount, &is_click) != 3)
 		{
 			// fprintf(stderr, "Invalid input format. Expected: x y\n");
 			continue;
@@ -136,6 +136,16 @@ int main()
 		// Move mouse based on x and y coordinates
 		send_event(uinput_fd, EV_REL, REL_X, x_amount);
 		send_event(uinput_fd, EV_REL, REL_Y, y_amount);
+
+		// BTN_LEFT
+		if (is_click != 0)
+		{
+			send_event(uinput_fd, EV_KEY, BTN_LEFT, 1);
+			send_event(uinput_fd, EV_SYN, SYN_REPORT, 0); // Sync the event
+			send_event(uinput_fd, EV_KEY, BTN_LEFT, 0);
+			is_click = 0;
+		}
+
 		send_event(uinput_fd, EV_SYN, SYN_REPORT, 0); // Sync the event
 	}
 

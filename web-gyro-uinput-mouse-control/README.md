@@ -5,3 +5,5 @@ This is a simple web interface hosted with a Node.js to control a mouse using a 
 HTTPS is required to access the gyroscope data from the phone. This was made with the intention of it running behind a reverse proxy.
 
 Security is non-existent.
+
+TODO: https://www.kernel.org/doc/html/v4.16/input/multi-touch-protocol.html ? trackpad emulation?

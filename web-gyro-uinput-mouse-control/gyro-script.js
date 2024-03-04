@@ -5,15 +5,17 @@ const messageInput = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
 const deviceMotion = document.getElementById('deviceMotion');
 const deviceOrientation = document.getElementById('deviceOrientation');
+const clickButton = document.getElementById('clickButton');
 const info = document.getElementById('info');
 
 let interval;
 let beta = 0, gamma = 0;
+let is_click = false;
 
 // Event listener for WebSocket open
 socket.addEventListener('open', (event) => {
 	console.log('WebSocket connection opened');
-	info.textContent = 'WebSocket connection opened';
+	info.textContent = 'WebSocket connection opened!';
 });
 
 socket.addEventListener('message', (event) => {
@@ -25,6 +27,7 @@ socket.addEventListener('message', (event) => {
 
 socket.addEventListener('close', (event) => {
 	console.log('WebSocket connection closed');
+	info.textContent = 'WebSocket connection closed';
 	clearInterval(interval);
 });
 
@@ -43,5 +46,10 @@ window.addEventListener('deviceorientation', (event) => {
 	if (!beta || !gamma) return;
 	if (!socket.readyState === WebSocket.OPEN) return;
 
-	socket.send(`${Math.round(gamma)} ${Math.round(beta)}\n`);
+	socket.send(`${Math.round(gamma)} ${Math.round(beta)} ${is_click ? 1 : 0}\n`);
+	is_click = false;
 });
+
+clickButton.addEventListener("click", () => {
+	is_click = true;
+})
