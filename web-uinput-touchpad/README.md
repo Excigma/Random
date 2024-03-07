@@ -1,9 +1,7 @@
-# web-gyro-uinput-mouse-control
- 
-This is a simple web interface hosted with a Node.js to control a mouse using a phone's gyroscope. It uses a small .c program interacting with the `uinput` kernel module to create a virtual mouse.
+# web-uinput-touchpad
 
-HTTPS is required to access the gyroscope data from the phone. This was made with the intention of it running behind a reverse proxy.
+Doesn't work at all yet. Work in progress. Or maybe not in progress anymore.
+
+This is a simple web interface hosted with a Node.js to control a mouse using a phone or web browser on a device with a touchscreen as a touchpad. It uses a small .c program interacting with the `uinput` kernel module to create a virtual mouse.
 
 Security is non-existent.
-
-TODO: https://www.kernel.org/doc/html/v4.16/input/multi-touch-protocol.html ? trackpad emulation?
