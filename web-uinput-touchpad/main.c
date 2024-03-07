@@ -9,7 +9,7 @@
 #include <linux/input-event-codes.h>
 #include <linux/input.h>
 
-#define ABS_MAXVAL 1650 // 65535
+// #define ABS_MAXVAL 1650 // 65535
 
 static const unsigned int allow_event_type[] = {
 	EV_KEY,
@@ -178,7 +178,7 @@ int main()
 			scanf("%d %d", &width, &height);
 
 			// Example vendor, product, version
-			uinput_fd = uinput_open("uinput-example", 0x1, 0x2, 0x3, ABS_MAXVAL, ABS_MAXVAL);
+			uinput_fd = uinput_open("uinput-example", 0x1, 0x2, 0x3, width, height);
 
 			if (uinput_fd == -1)
 			{
