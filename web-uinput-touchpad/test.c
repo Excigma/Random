@@ -41,16 +41,13 @@ int init_uinput_touchpad(const char *name)
 	ioctl(device, UI_SET_KEYBIT, BTN_TOUCH);
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_FINGER);
 	ioctl(device, UI_SET_KEYBIT, BTN_LEFT);
-	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_QUINTTAP);
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_DOUBLETAP);
-	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_TRIPLETAP);
-	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_QUADTAP);
 	ioctl(device, UI_SET_EVBIT, EV_ABS);
 
 	setup_abs(device, ABS_X, 0, ABS_MAXVAL, 13);
 	setup_abs(device, ABS_Y, 0, ABS_MAXVAL, 13);
-	setup_abs(device, ABS_MT_SLOT, 0, 4, 0);
-	setup_abs(device, ABS_MT_TRACKING_ID, 0, 4, 0);
+	setup_abs(device, ABS_MT_SLOT, 0, 1, 0);		 // Only two slots are needed for two fingers
+	setup_abs(device, ABS_MT_TRACKING_ID, -1, 1, 0); // Initialize slots with -1
 	setup_abs(device, ABS_MT_POSITION_X, 0, ABS_MAXVAL, 13);
 	setup_abs(device, ABS_MT_POSITION_Y, 0, ABS_MAXVAL, 13);
 	setup_abs(device, ABS_MT_TOOL_TYPE, 0, 2, 0);
@@ -96,47 +93,68 @@ int main()
 		return 1;
 	}
 
-	int delta_x = ABS_MAXVAL / 100;
+	int delta_x = ABS_MAXVAL / 4;
 	int delta_y = ABS_MAXVAL / 100;
 
 	int current_x = ABS_MAXVAL / 2;
 	int current_y = ABS_MAXVAL / 2;
-	int touch_identifier = 0;
 
+	// Required
 	usleep(2000000);
-	while (1)
+
+	// send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 0);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, 0);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_X, current_x);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 1);
+	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+
+	usleep(8000);
+
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 1);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, 1);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_X, current_x + delta_x); // offset for second finger
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
+	// send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 0);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_DOUBLETAP, 1);
+
+	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+	usleep(8000);
+
+	// lol what
+	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+	usleep(8000);
+
+	while (current_y >= 0)
 	{
-		current_y = ABS_MAXVAL / 2;
-
-		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, touch_identifier);
-		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, 1);
-		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_X, current_x);
+		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 0);
 		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
-		send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
-		send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 1);
-		// send_uinput_event(uinput_fd, EV_ABS, ABS_X, current_x);
-		// send_uinput_event(uinput_fd, EV_ABS, ABS_Y, current_y);
+		// send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+
+		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 1);
+		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
 		send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
 
+		current_y -= delta_y;
 		usleep(8000);
-
-		while (current_y >= 0)
-		{
-			send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
-			// send_uinput_event(uinput_fd, EV_ABS, ABS_Y, current_y);
-			send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
-			current_y -= delta_y;
-			usleep(8000);
-		}
-
-		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
-		send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 0);
-		send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 0);
-		send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
-
-		usleep(8000);
-		usleep(500000);
 	}
+
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 0);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 0);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_DOUBLETAP, 0);
+	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 1);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 0);
+	send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 0);
+	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+
+	usleep(8000);
+	usleep(500000);
 
 	ioctl(uinput_fd, UI_DEV_DESTROY);
 	close(uinput_fd);
