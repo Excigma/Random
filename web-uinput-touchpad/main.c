@@ -158,73 +158,115 @@ void send_uinput_event(int type, int code, int value)
 	write(uinput_fd, &ev, sizeof(ev));
 }
 
+/**
+ * Protocol (angle brackets are to be omitted):
+ * - 0 <width> <height> 0\n: Initialize a new device with dimensions width and height
+ * - 1 <type> <code> <value>\n: Call send_uinput_event with type, code, and value
+ */
 int main()
 {
-	uinput_fd = uinput_open("uinput-example", 0x1, 0x2, 0x3, ABS_MAXVAL, ABS_MAXVAL); // Example vendor, product, version
+	int command;
 
-	if (uinput_fd == -1)
+	// Parse the protocol from stdin. They may arrive in any order
+	while (scanf("%d", &command) == 1)
 	{
-		perror("Unable to open uinput device");
-		return 1;
+		switch (command)
+		{
+		case 0:
+			// Initialize a new device with dimensions width and height
+			int width = 0, height = 0;
+			scanf("%d %d", &width, &height);
+
+			// Example vendor, product, version
+			uinput_fd = uinput_open("uinput-example", 0x1, 0x2, 0x3, ABS_MAXVAL, ABS_MAXVAL);
+
+			if (uinput_fd == -1)
+			{
+				perror("Unable to open uinput device");
+				return 1;
+			}
+
+			// Required - unsure why
+			usleep(2000000);
+			break;
+		case 1:
+			// Call send_uinput_event with type, code, and value
+			int type = 0, code = 0, value = 0;
+			scanf("%d %d %d", &type, &code, &value);
+
+			send_uinput_event(type, code, value);
+			break;
+		default:
+			printf("Unknown command: %d\n", command);
+			break;
+		}
 	}
 
-	int delta_x = ABS_MAXVAL / 4;
-	int delta_y = ABS_MAXVAL / 100;
+	// uinput_fd = uinput_open("uinput-example", 0x1, 0x2, 0x3, ABS_MAXVAL, ABS_MAXVAL); // Example vendor, product, version
 
-	int current_x = ABS_MAXVAL / 2;
-	int current_y = ABS_MAXVAL / 2;
+	// if (uinput_fd == -1)
+	// {
+	// 	perror("Unable to open uinput device");
+	// 	return 1;
+	// }
 
-	// Required - unsure why
-	usleep(2000000);
+	// int delta_x = ABS_MAXVAL / 4;
+	// int delta_y = ABS_MAXVAL / 100;
 
-	send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
-	send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 0);
-	send_uinput_event(EV_ABS, ABS_MT_POSITION_X, current_x);
-	send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-	send_uinput_event(EV_KEY, BTN_TOUCH, 1);
-	send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 1);
-	send_uinput_event(EV_SYN, SYN_REPORT, 0);
+	// int current_x = ABS_MAXVAL / 2;
+	// int current_y = ABS_MAXVAL / 2;
 
-	// usleep(8000);
+	// // Required - unsure why
+	// // usleep(2000000);
 
-	send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
-	send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 1);
-	send_uinput_event(EV_ABS, ABS_MT_POSITION_X, current_x + delta_x); // offset for second finger
-	send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-	// send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
-	send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
-	send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 1);
+	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
+	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 0);
+	// send_uinput_event(EV_ABS, ABS_MT_POSITION_X, current_x);
+	// send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
+	// send_uinput_event(EV_KEY, BTN_TOUCH, 1);
+	// send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 1);
+	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
 
-	send_uinput_event(EV_SYN, SYN_REPORT, 0);
-	// usleep(8000);
+	// // usleep(8000);
 
-	while (current_y >= 0)
-	{
-		send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
-		send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-		// send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
+	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 1);
+	// send_uinput_event(EV_ABS, ABS_MT_POSITION_X, current_x + delta_x); // offset for second finger
+	// send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
+	// // send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
+	// send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
+	// send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 1);
 
-		send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
-		send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-		send_uinput_event(EV_SYN, SYN_REPORT, 0);
+	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
+	// // usleep(8000);
 
-		current_y -= delta_y;
-		usleep(80000);
-	}
+	// while (current_y >= 0)
+	// {
+	// 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
+	// 	send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
+	// 	// send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
 
-	send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
-	send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
-	send_uinput_event(EV_KEY, BTN_TOUCH, 0);
-	send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 0);
-	send_uinput_event(EV_SYN, SYN_REPORT, 0);
+	// 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
+	// 	send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
+	// 	send_uinput_event(EV_SYN, SYN_REPORT, 0);
 
-	send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
-	send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
-	send_uinput_event(EV_KEY, BTN_TOUCH, 0);
-	send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
-	send_uinput_event(EV_SYN, SYN_REPORT, 0);
+	// 	current_y -= delta_y;
+	// 	usleep(80000);
+	// }
 
-	// usleep(8000);
+	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
+	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
+	// send_uinput_event(EV_KEY, BTN_TOUCH, 0);
+	// send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 0);
+	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
+
+	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
+	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
+	// send_uinput_event(EV_KEY, BTN_TOUCH, 0);
+	// send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
+	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
+
+	// // usleep(8000);
 
 	uinput_close(uinput_fd);
 	return 0;

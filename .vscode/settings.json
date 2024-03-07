@@ -12,5 +12,6 @@
 		"stdio.h": "c",
 		"input-event-codes.h": "c",
 		"input.h": "c"
-	}
+	},
+	"C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }
