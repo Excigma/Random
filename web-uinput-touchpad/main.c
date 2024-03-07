@@ -174,7 +174,7 @@ int main()
 	int current_x = ABS_MAXVAL / 2;
 	int current_y = ABS_MAXVAL / 2;
 
-	// Required
+	// Required - unsure why
 	usleep(2000000);
 
 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
@@ -185,7 +185,7 @@ int main()
 	send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 1);
 	send_uinput_event(EV_SYN, SYN_REPORT, 0);
 
-	usleep(8000);
+	// usleep(8000);
 
 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
 	send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 1);
@@ -196,7 +196,7 @@ int main()
 	send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 1);
 
 	send_uinput_event(EV_SYN, SYN_REPORT, 0);
-	usleep(8000);
+	// usleep(8000);
 
 	while (current_y >= 0)
 	{
@@ -209,7 +209,7 @@ int main()
 		send_uinput_event(EV_SYN, SYN_REPORT, 0);
 
 		current_y -= delta_y;
-		usleep(8000);
+		usleep(80000);
 	}
 
 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
@@ -224,7 +224,7 @@ int main()
 	send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
 	send_uinput_event(EV_SYN, SYN_REPORT, 0);
 
-	usleep(8000);
+	// usleep(8000);
 
 	uinput_close(uinput_fd);
 	return 0;
