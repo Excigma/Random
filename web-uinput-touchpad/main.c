@@ -9,11 +9,11 @@
 #include <linux/input-event-codes.h>
 #include <linux/input.h>
 
-// #define ABS_MAXVAL 1650 // 65535
+#define ABS_MAXVAL 1650 // 65535
+#define MAX_16_BIT_INT 65535
 
 static const unsigned int allow_event_type[] = {
 	EV_KEY,
-	EV_SYN,
 	EV_SYN,
 	EV_ABS,
 };
@@ -22,19 +22,12 @@ static const unsigned int allow_event_type[] = {
 static const unsigned int allow_key_code[] = {
 	BTN_TOUCH,
 	BTN_TOOL_FINGER,
-	BTN_LEFT,
 	BTN_TOOL_DOUBLETAP,
 	BTN_TOOL_TRIPLETAP,
 	BTN_TOOL_QUADTAP,
 	BTN_TOOL_QUINTTAP,
 };
 #define ALLOWED_KEY_CODES (sizeof allow_key_code / sizeof allow_key_code[0])
-
-static const unsigned int allow_prop_bit[] = {
-	INPUT_PROP_POINTER,
-	INPUT_PROP_BUTTONPAD,
-};
-#define ALLOWED_PROP_BITS (sizeof allow_prop_bit / sizeof allow_prop_bit[0])
 
 static int uinput_fd;
 
@@ -108,18 +101,12 @@ static int uinput_open(const char *name, const unsigned int vendor, const unsign
 		if (i < ALLOWED_KEY_CODES)
 			break;
 
-		for (i = 0; i < ALLOWED_PROP_BITS; i++)
-			if (ioctl(uinput_fd, UI_SET_PROPBIT, allow_prop_bit[i]) == -1)
-				break;
-		if (i < ALLOWED_PROP_BITS)
-			break;
-
-		setup_abs(ABS_X, 0, width, 13);
-		setup_abs(ABS_Y, 0, height, 13);
-		setup_abs(ABS_MT_SLOT, 0, 4, 0);		 // Only two slots are needed for two fingers
-		setup_abs(ABS_MT_TRACKING_ID, -1, 1, 0); // Initialize slots with -1
-		setup_abs(ABS_MT_POSITION_X, 0, width, 13);
-		setup_abs(ABS_MT_POSITION_Y, 0, height, 13);
+		setup_abs(ABS_X, 0, width, 1);
+		setup_abs(ABS_Y, 0, height, 1);
+		setup_abs(ABS_MT_SLOT, 0, 10, 0);					  // Only two slots are needed for two fingers
+		setup_abs(ABS_MT_TRACKING_ID, -1, MAX_16_BIT_INT, 0); // Initialize slots with -1
+		setup_abs(ABS_MT_POSITION_X, 0, width, 1);
+		setup_abs(ABS_MT_POSITION_Y, 0, height, 1);
 		setup_abs(ABS_MT_TOOL_TYPE, 0, 2, 0);
 
 		if (ioctl(uinput_fd, UI_DEV_SETUP, &dev) == -1)
