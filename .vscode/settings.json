@@ -7,6 +7,10 @@
 		"fcntl.h": "c",
 		"ioctl.h": "c",
 		"stdlib.h": "c",
-		"unistd.h": "c"
+		"unistd.h": "c",
+		"uinput.h": "c",
+		"stdio.h": "c",
+		"input-event-codes.h": "c",
+		"input.h": "c"
 	}
 }

@@ -35,9 +35,10 @@ int init_uinput_touchpad(const char *name)
 	}
 
 	ioctl(device, UI_SET_EVBIT, EV_SYN);
+	ioctl(device, UI_SET_EVBIT, EV_KEY);
+	ioctl(device, UI_SET_EVBIT, EV_ABS);
 	ioctl(device, UI_SET_PROPBIT, INPUT_PROP_POINTER);
 	ioctl(device, UI_SET_PROPBIT, INPUT_PROP_BUTTONPAD);
-	ioctl(device, UI_SET_EVBIT, EV_KEY);
 	ioctl(device, UI_SET_KEYBIT, BTN_TOUCH);
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_FINGER);
 	ioctl(device, UI_SET_KEYBIT, BTN_LEFT);
@@ -45,7 +46,6 @@ int init_uinput_touchpad(const char *name)
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_TRIPLETAP);
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_QUADTAP);
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_QUINTTAP);
-	ioctl(device, UI_SET_EVBIT, EV_ABS);
 
 	setup_abs(device, ABS_X, 0, ABS_MAXVAL, 13);
 	setup_abs(device, ABS_Y, 0, ABS_MAXVAL, 13);
@@ -105,7 +105,7 @@ int main()
 	// Required
 	usleep(2000000);
 
-	// send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 0);
+	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 0);
 	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, 0);
 	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_X, current_x);
 	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
