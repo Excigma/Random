@@ -12,7 +12,7 @@
 void setup_abs(int fd, int code, int minimum, int maximum, int resolution)
 {
 	struct uinput_abs_setup abs_setup;
-
+	// Zero out the abs_setup structure
 	memset(&abs_setup, 0, sizeof(abs_setup));
 
 	abs_setup.code = code;
@@ -42,6 +42,9 @@ int init_uinput_touchpad(const char *name)
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_FINGER);
 	ioctl(device, UI_SET_KEYBIT, BTN_LEFT);
 	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_DOUBLETAP);
+	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_TRIPLETAP);
+	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_QUADTAP);
+	ioctl(device, UI_SET_KEYBIT, BTN_TOOL_QUINTTAP);
 	ioctl(device, UI_SET_EVBIT, EV_ABS);
 
 	setup_abs(device, ABS_X, 0, ABS_MAXVAL, 13);
@@ -53,6 +56,7 @@ int init_uinput_touchpad(const char *name)
 	setup_abs(device, ABS_MT_TOOL_TYPE, 0, 2, 0);
 
 	struct uinput_setup setup;
+	// Zero out the setup structure
 	memset(&setup, 0, sizeof(setup));
 	strncpy(setup.name, name, UINPUT_MAX_NAME_SIZE - 1);
 
@@ -71,15 +75,14 @@ int init_uinput_touchpad(const char *name)
 void send_uinput_event(int device, int type, int code, int value)
 {
 	struct input_event ev;
+	// Zero out the input_event structure
+	memset(&ev, 0, sizeof(ev));
+
 	ev.type = type;
 	ev.code = code;
 	ev.value = value;
 
-	if (write(device, &ev, sizeof(ev)) < 0)
-	{
-		perror("write to device");
-		exit(EXIT_FAILURE);
-	}
+	write(device, &ev, sizeof(ev));
 }
 
 int main()
@@ -123,10 +126,6 @@ int main()
 	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
 	usleep(8000);
 
-	// lol what
-	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
-	usleep(8000);
-
 	while (current_y >= 0)
 	{
 		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, 0);
@@ -154,7 +153,6 @@ int main()
 	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
 
 	usleep(8000);
-	usleep(500000);
 
 	ioctl(uinput_fd, UI_DEV_DESTROY);
 	close(uinput_fd);

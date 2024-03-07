@@ -1,0 +1,12 @@
+{
+	"files.associations": {
+		"*.ah2": "ahk",
+		".env.local": "properties",
+		"string.h": "c",
+		"errno.h": "c",
+		"fcntl.h": "c",
+		"ioctl.h": "c",
+		"stdlib.h": "c",
+		"unistd.h": "c"
+	}
+}
