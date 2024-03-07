@@ -103,35 +103,40 @@ int main()
 	int current_y = ABS_MAXVAL / 2;
 	int touch_identifier = 0;
 
-	usleep(1000000);
-
-	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, touch_identifier);
-	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, 2);
-	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_X, current_x);
-	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
-	send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
-	send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 1);
-	send_uinput_event(uinput_fd, EV_ABS, ABS_X, current_x);
-	send_uinput_event(uinput_fd, EV_ABS, ABS_Y, current_y);
-	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
-
-	usleep(8000);
-
-	while (current_y >= 0)
+	usleep(2000000);
+	while (1)
 	{
+		current_y = ABS_MAXVAL / 2;
+
+		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_SLOT, touch_identifier);
+		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, 1);
+		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_X, current_x);
 		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
-		send_uinput_event(uinput_fd, EV_ABS, ABS_Y, current_y);
+		send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
+		send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 1);
+		// send_uinput_event(uinput_fd, EV_ABS, ABS_X, current_x);
+		// send_uinput_event(uinput_fd, EV_ABS, ABS_Y, current_y);
 		send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
-		current_y -= delta_y;
+
 		usleep(8000);
+
+		while (current_y >= 0)
+		{
+			send_uinput_event(uinput_fd, EV_ABS, ABS_MT_POSITION_Y, current_y);
+			// send_uinput_event(uinput_fd, EV_ABS, ABS_Y, current_y);
+			send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+			current_y -= delta_y;
+			usleep(8000);
+		}
+
+		send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+		send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 0);
+		send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 0);
+		send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
+
+		usleep(8000);
+		usleep(500000);
 	}
-
-	send_uinput_event(uinput_fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
-	send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 0);
-	send_uinput_event(uinput_fd, EV_KEY, BTN_TOOL_FINGER, 0);
-	send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
-
-	usleep(8000);
 
 	ioctl(uinput_fd, UI_DEV_DESTROY);
 	close(uinput_fd);
