@@ -3,7 +3,7 @@
   "packageManager": "yarn@4.1.0",
   "scripts": {
     "start": "node server.js",
-    "build": "gcc main.c -o ./build/main"
+    "build": "gcc main.c -o main.bin"
   },
   "dependencies": {
     "ws": "^8.16.0"

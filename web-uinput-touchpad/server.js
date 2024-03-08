@@ -22,7 +22,7 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
 	console.log('Client connected');
 
-	const cProcess = spawn('./build/main', [], { stdio: 'pipe' });
+	const cProcess = spawn('./main.bin', [], { stdio: 'pipe' });
 
 	ws.on('message', (message) => {
 		const text = message.toString('utf8');
