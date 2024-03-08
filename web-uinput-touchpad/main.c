@@ -12,6 +12,9 @@
 #define ABS_MAXVAL 1650 // 65535
 #define MAX_16_BIT_INT 65535
 
+// Changes the sensitivity of the touchpad. Lower is more sensitive.
+#define RESOLUTION 5
+
 static const unsigned int allow_event_type[] = {
 	EV_KEY,
 	EV_SYN,
@@ -99,12 +102,12 @@ static int uinput_open(int uinput_fd, const char *name, const unsigned int vendo
 		if (i < ALLOWED_KEY_CODES)
 			break;
 
-		setup_abs(uinput_fd, ABS_X, 0, width, 1);
-		setup_abs(uinput_fd, ABS_Y, 0, height, 1);
+		setup_abs(uinput_fd, ABS_X, 0, width, RESOLUTION);
+		setup_abs(uinput_fd, ABS_Y, 0, height, RESOLUTION);
 		setup_abs(uinput_fd, ABS_MT_SLOT, 0, 20, 0);					 // Only two slots are needed for two fingers
 		setup_abs(uinput_fd, ABS_MT_TRACKING_ID, -1, MAX_16_BIT_INT, 0); // Initialize slots with -1
-		setup_abs(uinput_fd, ABS_MT_POSITION_X, 0, width, 1);
-		setup_abs(uinput_fd, ABS_MT_POSITION_Y, 0, height, 1);
+		setup_abs(uinput_fd, ABS_MT_POSITION_X, 0, width, RESOLUTION);
+		setup_abs(uinput_fd, ABS_MT_POSITION_Y, 0, height, RESOLUTION);
 
 		if (ioctl(uinput_fd, UI_DEV_SETUP, &dev) == -1)
 			break;
