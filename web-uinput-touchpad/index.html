@@ -34,17 +34,12 @@
 			border: 1px solid #fff;
 			cursor: pointer;
 		}
-
-		#info {
-			pointer-events: none;
-		}
 	</style>
 </head>
 
-<body>
+<body><button id="fullscreen-button">Fullscreen</button>
 	<canvas id="myCanvas"></canvas>
 	<p id="info"></p>
-	<button id="fullscreen-button">Fullscreen</button>
 
 	<script>
 		const EV_ABS = 3;
@@ -89,7 +84,7 @@
 
 		// Event listener for WebSocket open
 		socket.addEventListener('open', (event) => {
-			// initSocket();
+			initSocket();
 			console.log('WebSocket connection opened');
 			info.textContent = 'WebSocket connection opened!';
 		});
@@ -112,9 +107,9 @@
 		function send_uinput_event(type, code, value) {
 			if (socket.readyState !== WebSocket.OPEN) return;
 			if (value === undefined) throw new Error("Value is required");
-			console.log("");
-			console.log(`1 ${type} ${code} ${value}\n`)
-			console.log(`1 ${Math.round(type)} ${Math.round(code)} ${Math.round(value)}\n`);
+			// console.log("");
+			// console.log(`1 ${type} ${code} ${value}\n`)
+			// console.log(`1 ${Math.round(type)} ${Math.round(code)} ${Math.round(value)}\n`);
 
 			socket.send(`1 ${Math.round(type)} ${Math.round(code)} ${Math.round(value)}\n`);
 		}
@@ -127,7 +122,7 @@
 				const previousTouchCount = touches.reduce((acc, t) => t?.slot > -1 ? acc + 1 : acc, 0);
 				// Use the next available slot
 				// TODO: Can you re-use a previous slot?
-				console.log(`nextSlot: ${nextSlot}`)
+				// console.log(`nextSlot: ${nextSlot}`)
 				send_uinput_event(EV_ABS, ABS_MT_SLOT, nextSlot);
 				send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 0);
 				send_uinput_event(EV_ABS, ABS_MT_POSITION_X, touch.clientX);
@@ -182,11 +177,9 @@
 				const index = touches.findIndex(t => t.identifier === touch.identifier);
 				// Can't find the touch
 				if (index === -1) continue;
-				const storedTouch = touches[index];
 
-				console.log(touch);
 				if (touch.clientX !== touch.x || touch.clientY !== touch.y) {
-					send_uinput_event(EV_ABS, ABS_MT_SLOT, storedTouch.slot);
+					send_uinput_event(EV_ABS, ABS_MT_SLOT, touches[index].slot);
 				}
 
 				if (touch.clientX !== touch.x) {
@@ -197,7 +190,9 @@
 					send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, touch.clientY);
 				}
 
-				send_uinput_event(EV_SYN, SYN_REPORT, 0);
+				if (touch.clientX !== touch.x || touch.clientY !== touch.y) {
+					send_uinput_event(EV_SYN, SYN_REPORT, 0);
+				}
 
 				touches[index].x = touch.clientX;
 				touches[index].y = touch.clientY;
@@ -206,7 +201,7 @@
 			syncCanvas();
 		});
 
-		document.addEventListener("touchend", (event) => {
+		canvas.addEventListener("touchend", (event) => {
 			event.preventDefault();
 
 			// Some touches have ended
@@ -292,10 +287,14 @@
 				document.exitFullscreen();
 				initSocket();
 
+				// Rotate back
+				screen.orientation.unlock();
 				fullscreenButton.innerText = 'Fullscreen'; // Change button text back to 'Fullscreen'
 			} else {
 				if (document.body.requestFullscreen) {
 					document.body.requestFullscreen();
+					// rotate to landscape
+					screen.orientation.lock('landscape');
 
 					initSocket();
 					fullscreenButton.innerText = 'Exit Fullscreen'; // Change button text to 'Exit Fullscreen'

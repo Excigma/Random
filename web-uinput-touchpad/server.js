@@ -26,20 +26,8 @@ wss.on('connection', (ws) => {
 
 	ws.on('message', (message) => {
 		const text = message.toString('utf8');
-		console.log('Received:', text);
-		if (!cProcess.stdin) {
-			console.log("reject bc cProcess.stdin falsey")
-			return;
-		}
-
-		if (!cProcess.stdin.writable) {
-			console.log("reject bc cProcess.stdin not writable")
-			return;
-		}
-
-		cProcess.stdin.write(text, (error) => {
-			if (error) console.error(error);
-		});
+		// console.log('Received:', text);
+		cProcess.stdin.write(text);
 	});
 
 	cProcess.stdout.on('data', (data) => {

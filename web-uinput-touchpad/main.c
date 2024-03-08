@@ -172,7 +172,6 @@ int main()
 
 			// Example vendor, product, version
 			uinput_fd = uinput_open(uinput_fd, "uinput-example", 0x1, 0x2, 0x3, ABS_MAXVAL, ABS_MAXVAL); // one two
-			printf("uinput_open() called\n");
 
 			if (uinput_fd == -1)
 			{
@@ -184,7 +183,6 @@ int main()
 		{
 			// Call send_uinput_event with type, code, and value
 			send_uinput_event(uinput_fd, one, two, three);
-			printf("send_uinput_event(%d, %d, %d, %d)\n", uinput_fd, one, two, three);
 		}
 	}
 
