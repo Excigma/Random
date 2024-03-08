@@ -6,4 +6,4 @@ HTTPS is required to access the gyroscope data from the phone. This was made wit
 
 Security is non-existent.
 
-TODO: https://www.kernel.org/doc/html/v4.16/input/multi-touch-protocol.html ? trackpad emulation?
+You need to create some udev rules: https://github.com/H-M-H/Weylus/blob/8c5ad71b8e7a3628d9e988f9adbdc1bb214b205f/Readme.md#linux
