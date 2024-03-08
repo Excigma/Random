@@ -120,7 +120,12 @@
 			// There have been new touches on the Canvas
 			for (const touch of event.changedTouches) {
 				const previousTouchCount = touches.reduce((acc, t) => t?.slot > -1 ? acc + 1 : acc, 0);
-				// Use the next available slot
+				// Find the first empty index in touches array
+				let nextSlot = touches.findIndex(t => t?.slot === undefined);
+				if (nextSlot === -1) {
+					nextSlot = touches.length;
+				}
+
 				// TODO: Can you re-use a previous slot?
 				// console.log(`nextSlot: ${nextSlot}`)
 				send_uinput_event(EV_ABS, ABS_MT_SLOT, nextSlot);
@@ -156,15 +161,15 @@
 
 				send_uinput_event(EV_SYN, SYN_REPORT, 0);
 
-				touches.push({
+				touches[nextSlot] = {
 					slot: nextSlot,
 					identifier: touch.identifier,
 					x: touch.clientX,
 					y: touch.clientY
-				});
+				};
 
 				// Increment the next slot
-				nextSlot++;
+				// nextSlot++;
 			}
 			syncCanvas();
 		});
@@ -251,6 +256,12 @@
 			}
 
 			syncCanvas();
+		})
+
+		window.addEventListener("resize", () => {
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
+			initSocket();
 		})
 
 		function syncCanvas() {
