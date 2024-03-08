@@ -29,9 +29,7 @@ static const unsigned int allow_key_code[] = {
 };
 #define ALLOWED_KEY_CODES (sizeof allow_key_code / sizeof allow_key_code[0])
 
-static int uinput_fd;
-
-static void uinput_close()
+static void uinput_close(int uinput_fd)
 {
 	if (uinput_fd == -1)
 		return;
@@ -42,10 +40,10 @@ static void uinput_close()
 	uinput_fd = -1;
 }
 
-void setup_abs(int code, int minimum, int maximum, int resolution)
+void setup_abs(int uinput_fd, int code, int minimum, int maximum, int resolution)
 {
 	if (uinput_fd == -1)
-		uinput_close();
+		uinput_close(uinput_fd);
 
 	struct uinput_abs_setup abs_setup;
 	// Zero out the abs_setup structure
@@ -61,10 +59,10 @@ void setup_abs(int code, int minimum, int maximum, int resolution)
 	ioctl(uinput_fd, UI_ABS_SETUP, &abs_setup);
 }
 
-static int uinput_open(const char *name, const unsigned int vendor, const unsigned int product, const unsigned int version, int height, int width)
+static int uinput_open(int uinput_fd, const char *name, const unsigned int vendor, const unsigned int product, const unsigned int version, int height, int width)
 {
 	if (uinput_fd != -1)
-		uinput_close();
+		uinput_close(uinput_fd);
 
 	struct uinput_user_dev dev;
 	size_t i;
@@ -101,13 +99,12 @@ static int uinput_open(const char *name, const unsigned int vendor, const unsign
 		if (i < ALLOWED_KEY_CODES)
 			break;
 
-		setup_abs(ABS_X, 0, width, 1);
-		setup_abs(ABS_Y, 0, height, 1);
-		setup_abs(ABS_MT_SLOT, 0, 10, 0);					  // Only two slots are needed for two fingers
-		setup_abs(ABS_MT_TRACKING_ID, -1, MAX_16_BIT_INT, 0); // Initialize slots with -1
-		setup_abs(ABS_MT_POSITION_X, 0, width, 1);
-		setup_abs(ABS_MT_POSITION_Y, 0, height, 1);
-		setup_abs(ABS_MT_TOOL_TYPE, 0, 2, 0);
+		setup_abs(uinput_fd, ABS_X, 0, width, 1);
+		setup_abs(uinput_fd, ABS_Y, 0, height, 1);
+		setup_abs(uinput_fd, ABS_MT_SLOT, 0, 20, 0);					 // Only two slots are needed for two fingers
+		setup_abs(uinput_fd, ABS_MT_TRACKING_ID, -1, MAX_16_BIT_INT, 0); // Initialize slots with -1
+		setup_abs(uinput_fd, ABS_MT_POSITION_X, 0, width, 1);
+		setup_abs(uinput_fd, ABS_MT_POSITION_Y, 0, height, 1);
 
 		if (ioctl(uinput_fd, UI_DEV_SETUP, &dev) == -1)
 			break;
@@ -129,7 +126,7 @@ static int uinput_open(const char *name, const unsigned int vendor, const unsign
 	}
 }
 
-void send_uinput_event(int type, int code, int value)
+void send_uinput_event(int uinput_fd, int type, int code, int value)
 {
 	if (uinput_fd == -1)
 		return;
@@ -152,108 +149,46 @@ void send_uinput_event(int type, int code, int value)
  */
 int main()
 {
-	int command;
+	int uinput_fd = -1;
+	int command = 0, one = 0, two = 0, three = 0;
 
-	// Parse the protocol from stdin. They may arrive in any order
-	while (scanf("%d", &command) == 1)
+	char input_buffer[30];
+
+	while (fgets(input_buffer, sizeof(input_buffer), stdin) != NULL)
 	{
-		switch (command)
+		// Parse input for x and y coordinates
+		if (sscanf(input_buffer, "%d %d %d %d", &command, &one, &two, &three) != 4)
 		{
-		case 0:
+			printf("Invalid input format.");
+			continue;
+		}
+
+		// do i need this
+		// memset(input_buffer, 0, sizeof(input_buffer));
+
+		if (command == 0)
+		{
 			// Initialize a new device with dimensions width and height
-			int width = 0, height = 0;
-			scanf("%d %d", &width, &height);
 
 			// Example vendor, product, version
-			uinput_fd = uinput_open("uinput-example", 0x1, 0x2, 0x3, width, height);
+			uinput_fd = uinput_open(uinput_fd, "uinput-example", 0x1, 0x2, 0x3, ABS_MAXVAL, ABS_MAXVAL); // one two
+			printf("uinput_open() called\n");
 
 			if (uinput_fd == -1)
 			{
 				perror("Unable to open uinput device");
 				return 1;
 			}
-
-			// Required - unsure why
-			usleep(2000000);
-			break;
-		case 1:
+		}
+		else if (command == 1)
+		{
 			// Call send_uinput_event with type, code, and value
-			int type = 0, code = 0, value = 0;
-			scanf("%d %d %d", &type, &code, &value);
-
-			send_uinput_event(type, code, value);
-			break;
-		default:
-			printf("Unknown command: %d\n", command);
-			break;
+			send_uinput_event(uinput_fd, one, two, three);
+			printf("send_uinput_event(%d, %d, %d, %d)\n", uinput_fd, one, two, three);
 		}
 	}
 
-	// uinput_fd = uinput_open("uinput-example", 0x1, 0x2, 0x3, ABS_MAXVAL, ABS_MAXVAL); // Example vendor, product, version
-
-	// if (uinput_fd == -1)
-	// {
-	// 	perror("Unable to open uinput device");
-	// 	return 1;
-	// }
-
-	// int delta_x = ABS_MAXVAL / 4;
-	// int delta_y = ABS_MAXVAL / 100;
-
-	// int current_x = ABS_MAXVAL / 2;
-	// int current_y = ABS_MAXVAL / 2;
-
-	// // Required - unsure why
-	// // usleep(2000000);
-
-	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
-	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 0);
-	// send_uinput_event(EV_ABS, ABS_MT_POSITION_X, current_x);
-	// send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-	// send_uinput_event(EV_KEY, BTN_TOUCH, 1);
-	// send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 1);
-	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
-
-	// // usleep(8000);
-
-	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
-	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 1);
-	// send_uinput_event(EV_ABS, ABS_MT_POSITION_X, current_x + delta_x); // offset for second finger
-	// send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-	// // send_uinput_event(uinput_fd, EV_KEY, BTN_TOUCH, 1);
-	// send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
-	// send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 1);
-
-	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
-	// // usleep(8000);
-
-	// while (current_y >= 0)
-	// {
-	// 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
-	// 	send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-	// 	// send_uinput_event(uinput_fd, EV_SYN, SYN_REPORT, 0);
-
-	// 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
-	// 	send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, current_y);
-	// 	send_uinput_event(EV_SYN, SYN_REPORT, 0);
-
-	// 	current_y -= delta_y;
-	// 	usleep(80000);
-	// }
-
-	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 0);
-	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
-	// send_uinput_event(EV_KEY, BTN_TOUCH, 0);
-	// send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 0);
-	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
-
-	// send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);
-	// send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
-	// send_uinput_event(EV_KEY, BTN_TOUCH, 0);
-	// send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
-	// send_uinput_event(EV_SYN, SYN_REPORT, 0);
-
-	// // usleep(8000);
+	printf("Exiting\n");
 
 	uinput_close(uinput_fd);
 	return 0;

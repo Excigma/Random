@@ -202,6 +202,7 @@ int main()
 	send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
 	send_uinput_event(EV_KEY, BTN_TOUCH, 0);
 	send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 0);
+	send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 1);
 	send_uinput_event(EV_SYN, SYN_REPORT, 0);
 
 	send_uinput_event(EV_ABS, ABS_MT_SLOT, 1);

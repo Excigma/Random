@@ -16,6 +16,7 @@ const server = http.createServer((req, res) => {
 	}
 });
 
+let writing = false;
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
@@ -26,7 +27,27 @@ wss.on('connection', (ws) => {
 	ws.on('message', (message) => {
 		const text = message.toString('utf8');
 		console.log('Received:', text);
-		cProcess.stdin.write(text);
+		if (!cProcess.stdin) {
+			console.log("reject bc cProcess.stdin falsey")
+			return;
+		}
+
+		if (!cProcess.stdin.writable) {
+			console.log("reject bc cProcess.stdin not writable")
+			return;
+		}
+
+		cProcess.stdin.write(text, (error) => {
+			if (error) console.error(error);
+		});
+	});
+
+	cProcess.stdout.on('data', (data) => {
+		console.log(`stdout: ${data}`);
+	});
+
+	cProcess.stderr.on('data', (data) => {
+		console.error(`stderr: ${data}`);
 	});
 
 	cProcess.on('close', (code) => {
