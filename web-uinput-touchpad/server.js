@@ -3,6 +3,7 @@ const WebSocket = require('ws');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { networkInterfaces } = require('os');
 
 const htmlFile = fs.readFileSync(path.join(__dirname, 'index.html'));
 
@@ -56,4 +57,18 @@ wss.on('connection', (ws) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
 	console.log(`Server listening on port ${PORT}`);
+
+	const nets = networkInterfaces();
+	const results = []
+
+	for (const name of Object.keys(nets)) {
+		for (const net of nets[name]) {
+			const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4
+			if (net.family === familyV4Value && !net.internal) {
+				results.push(net.address);
+			}
+		}
+	}
+
+	console.log(`Try visiting: ${results.map(ip => `http://${ip}:${PORT}/`)} on your phone!`)
 });
