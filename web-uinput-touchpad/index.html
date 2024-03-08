@@ -206,7 +206,7 @@
 			syncCanvas();
 		});
 
-		canvas.addEventListener("touchend", (event) => {
+		const touchstop = (event) => {
 			event.preventDefault();
 
 			// Some touches have ended
@@ -256,7 +256,10 @@
 			}
 
 			syncCanvas();
-		})
+		}
+
+		canvas.addEventListener("touchend", touchstop);
+		canvas.addEventListener("touchcancel", touchstop);
 
 		window.addEventListener("resize", () => {
 			canvas.width = window.innerWidth;
