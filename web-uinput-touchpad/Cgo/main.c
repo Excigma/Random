@@ -14,14 +14,14 @@
 // Changes the sensitivity of the touchpad. Lower is more sensitive.
 #define RESOLUTION 5
 
-static const unsigned int allow_event_type[] = {
+const unsigned int allow_event_type[] = {
 	EV_KEY,
 	EV_SYN,
 	EV_ABS,
 };
 #define ALLOWED_EVENT_TYPES (sizeof allow_event_type / sizeof allow_event_type[0])
 
-static const unsigned int allow_key_code[] = {
+const unsigned int allow_key_code[] = {
 	BTN_TOUCH,
 	BTN_TOOL_FINGER,
 	BTN_TOOL_DOUBLETAP,
@@ -122,8 +122,6 @@ void send_uinput_event(int uinput_fd, int type, int code, int value)
 		return;
 
 	struct input_event ev;
-	// Zero out the input_event structure
-	memset(&ev, 0, sizeof(ev));
 
 	ev.type = type;
 	ev.code = code;
