@@ -42,6 +42,24 @@
 	<p id="info"></p>
 
 	<script>
+		const EV_ABS = 3;
+		const EV_KEY = 1;
+		const EV_SYN = 0;
+
+		const ABS_MT_SLOT = 0x2f;
+		const ABS_MT_TRACKING_ID = 0x39;
+		const ABS_MT_POSITION_X = 0x35;
+		const ABS_MT_POSITION_Y = 0x36;
+
+		const BTN_TOUCH = 0x14a;
+		const BTN_TOOL_FINGER = 0x145;
+		const BTN_TOOL_DOUBLETAP = 0x14d;
+		const BTN_TOOL_TRIPLETAP = 0x14e;
+		const BTN_TOOL_QUADTAP = 0x14f;
+		const BTN_TOOL_QUINTTAP = 0x148;
+
+		const SYN_REPORT = 0;
+
 		// Elements
 		const messagesDiv = document.getElementById('messages');
 		const info = document.getElementById('info');
@@ -50,14 +68,13 @@
 		const fullscreenButton = document.getElementById('fullscreen-button');
 
 		// Touch state
+		let nextSlot = 0;
 		const touches = [];
 
 		/**
 		 * Protocol (angle brackets are to be omitted):
-		 * - 0 <width> <height>: Initialize a new device with dimensions width and height
-		 * - 1 <slot> <x> <y>: Simulate a new touch contact at slot with coordinates x and y
-		 * - 2 <slot> <x> <y>: Simulate a touch contact moving to coordinates x and y
-		 * - 3 <slot>: Simulate a touch contact being lifted
+		 * - 0 <width> <height> 0\n: Initialize a new device with dimensions width and height
+		 * - 1 <type> <code> <value>\n: Call send_uinput_event with type, code, and value
 		 */
 		const socket = new WebSocket("ws://" + location.host + "/ws");
 
@@ -83,7 +100,18 @@
 
 		function initSocket() {
 			if (socket.readyState !== WebSocket.OPEN) return;
-			socket.send(`0 ${Math.round(canvas.width)} ${Math.round(canvas.height)}\n`);
+			socket.send(`0 ${Math.round(canvas.width)} ${Math.round(canvas.height)} 0\n`);
+		}
+
+		// Function to send touch data to the server
+		function send_uinput_event(type, code, value) {
+			if (socket.readyState !== WebSocket.OPEN) return;
+			if (value === undefined) throw new Error("Value is required");
+			// console.log("");
+			// console.log(`1 ${type} ${code} ${value}\n`)
+			// console.log(`1 ${Math.round(type)} ${Math.round(code)} ${Math.round(value)}\n`);
+
+			socket.send(`1 ${Math.round(type)} ${Math.round(code)} ${Math.round(value)}\n`);
 		}
 
 		canvas.addEventListener('touchstart', (event) => {
@@ -91,21 +119,58 @@
 
 			// There have been new touches on the Canvas
 			for (const touch of event.changedTouches) {
+				const previousTouchCount = touches.reduce((acc, t) => t?.slot > -1 ? acc + 1 : acc, 0);
 				// Find the first empty index in touches array
 				let nextSlot = touches.findIndex(t => t?.slot === undefined);
 				if (nextSlot === -1) {
 					nextSlot = touches.length;
 				}
 
-				touches[nextSlot] = {
-					x: touch.clientX,
-					y: touch.clientY,
-					slot: nextSlot,
-					identifier: touch.identifier
-				}
-				socket.send(`1 ${nextSlot} ${Math.round(touch.clientX)} ${Math.round(touch.clientY)}\n`);
-			}
+				// TODO: Can you re-use a previous slot?
+				// console.log(`nextSlot: ${nextSlot}`)
+				send_uinput_event(EV_ABS, ABS_MT_SLOT, nextSlot);
+				send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, 0);
+				send_uinput_event(EV_ABS, ABS_MT_POSITION_X, touch.clientX);
+				send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, touch.clientY);
 
+				switch (previousTouchCount) {
+					case 0:
+						// Touch started?
+						send_uinput_event(EV_KEY, BTN_TOUCH, 1);
+						// Finger down
+						send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 1);
+						break;
+					case 1:
+						// Switch the events
+						send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 1);
+						break;
+					case 2:
+						send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_TRIPLETAP, 1);
+						break;
+					case 3:
+						send_uinput_event(EV_KEY, BTN_TOOL_TRIPLETAP, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_QUADTAP, 1);
+						break;
+					case 4:
+						send_uinput_event(EV_KEY, BTN_TOOL_QUADTAP, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_QUINTTAP, 1);
+						break;
+				}
+
+				send_uinput_event(EV_SYN, SYN_REPORT, 0);
+
+				touches[nextSlot] = {
+					slot: nextSlot,
+					identifier: touch.identifier,
+					x: touch.clientX,
+					y: touch.clientY
+				};
+
+				// Increment the next slot
+				// nextSlot++;
+			}
 			syncCanvas();
 		});
 
@@ -118,7 +183,24 @@
 				// Can't find the touch
 				if (index === -1) continue;
 
-				socket.send(`2 ${touches[index].slot} ${Math.round(touch.clientX)} ${Math.round(touch.clientY)}\n`);
+				if (touch.clientX !== touch.x || touch.clientY !== touch.y) {
+					send_uinput_event(EV_ABS, ABS_MT_SLOT, touches[index].slot);
+				}
+
+				if (touch.clientX !== touch.x) {
+					send_uinput_event(EV_ABS, ABS_MT_POSITION_X, touch.clientX);
+				}
+
+				if (touch.clientY !== touch.y) {
+					send_uinput_event(EV_ABS, ABS_MT_POSITION_Y, touch.clientY);
+				}
+
+				if (touch.clientX !== touch.x || touch.clientY !== touch.y) {
+					send_uinput_event(EV_SYN, SYN_REPORT, 0);
+				}
+
+				touches[index].x = touch.clientX;
+				touches[index].y = touch.clientY;
 			}
 
 			syncCanvas();
@@ -132,8 +214,44 @@
 				const index = touches.findIndex(t => t.identifier === touch.identifier);
 				// Can't find the touch
 				if (index === -1) continue;
+				const storedTouch = touches[index];
 
-				socket.send(`3 ${touches[index].slot}\n`);
+				const previousTouchCount = touches.reduce((acc, t) => t?.slot > -1 ? acc + 1 : acc, 0);
+
+				send_uinput_event(EV_ABS, ABS_MT_SLOT, storedTouch.slot);
+				send_uinput_event(EV_ABS, ABS_MT_TRACKING_ID, -1);
+
+
+				switch (previousTouchCount) {
+					case 0:
+						// Huh what??????????????????
+						break;
+					case 1:
+						send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 0);
+						send_uinput_event(EV_KEY, BTN_TOUCH, 0);
+						break;
+					case 2:
+						// Switch the events
+						send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_FINGER, 1);
+						break;
+					case 3:
+						send_uinput_event(EV_KEY, BTN_TOOL_TRIPLETAP, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_DOUBLETAP, 1);
+						break;
+					case 4:
+						send_uinput_event(EV_KEY, BTN_TOOL_QUADTAP, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_TRIPLETAP, 1);
+						break;
+					case 5:
+						send_uinput_event(EV_KEY, BTN_TOOL_QUINTTAP, 0);
+						send_uinput_event(EV_KEY, BTN_TOOL_QUADTAP, 1);
+						break;
+				}
+
+
+				send_uinput_event(EV_SYN, SYN_REPORT, 0);
+
 				touches.splice(index, 1);
 			}
 

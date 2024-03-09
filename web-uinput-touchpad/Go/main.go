@@ -1,12 +1,16 @@
 package main
 
+/*
+#include <main.h>
+*/
+import "C"
+
 import (
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/bendahl/uinput"
 	"github.com/gorilla/websocket"
 )
 
@@ -17,7 +21,7 @@ var upgrader = websocket.Upgrader{
 
 func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		var touchpad uinput.MultiTouch
+		var uinput_fp C.int = -1
 
 		conn, wsErr := upgrader.Upgrade(w, r, nil)
 		if wsErr != nil {
@@ -60,34 +64,16 @@ func main() {
 			if numbers[0] == 0 {
 				// Init packet to initialize a new touchpad device
 				// width, height
-				// Close the previous touchpad if it exists
-				if touchpad != nil {
-					touchpad.Close()
+				if uinput_fp != -1 {
+					C.uinput_close(uinput_fp)
 				}
 
-				// Create a new touchpad with the given dimensions
-				touchpad, err = uinput.CreateMultiTouch(
-					"/dev/uinput",
-					[]byte("virtual-touchpad"),
-					0,
-					numbers[1],
-					0,
-					numbers[2],
-					10)
-				if err != nil {
-					return
-				}
-				defer touchpad.Close()
-			} else if numbers[0] == 1 || numbers[0] == 2 {
+				uinput_fp = C.uinput_open(C.int(numbers[1]), C.int(numbers[2]))
+				defer C.uinput_close(uinput_fp)
+			} else if numbers[0] == 1 {
 				// Touchdown packet to simulate a new touch contact
 				// slot, x, y
-				// Simulate a new touch contact
-				touchpad.GetContacts()[numbers[1]].TouchDownAt(numbers[2], numbers[3])
-			} else if numbers[0] == 3 {
-				// Touchup packet to simulate a touch contact being lifted
-				// slot
-				// Simulate a touch contact being lifted
-				touchpad.GetContacts()[numbers[1]].TouchUp()
+				C.send_uinput_event(uinput_fp, C.int(numbers[1]), C.int(numbers[2]), C.int(numbers[3]))
 			}
 		}
 	})
