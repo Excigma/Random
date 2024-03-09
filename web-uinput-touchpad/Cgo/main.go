@@ -57,7 +57,7 @@ func main() {
 			}
 
 			// Print the parsed numbers
-			fmt.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
+			// fmt.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
 
 			if numbers[0] == 0 {
 				// Init packet to initialize a new touchpad device
