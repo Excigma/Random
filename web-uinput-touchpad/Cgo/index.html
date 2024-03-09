@@ -83,14 +83,20 @@
 				socket.send(`0 ${Math.round(toucharea.clientWidth)} ${Math.round(toucharea.clientHeight)}\n`);
 			}
 
-			function handleTouch(event) {
-				for (const touch of event.changedTouches) {
+			function handleTouch(evt) {
+				evt.preventDefault();
+				evt.stopImmediatePropagation();
+
+				for (const touch of evt.changedTouches) {
 					socket.send(`1 ${touch.identifier} ${Math.round(touch.clientX)} ${Math.round(touch.clientY)}\n`);
 				}
 			}
 
-			function handleTouchEnd(event) {
-				for (const touch of event.changedTouches) {
+			function handleTouchEnd(evt) {
+				evt.preventDefault();
+				evt.stopImmediatePropagation();
+
+				for (const touch of evt.changedTouches) {
 					socket.send(`2 ${touch.identifier}\n`);
 				}
 			}
@@ -105,9 +111,6 @@
 
 			// Fullscreen button functionality
 			fullscreenButton.addEventListener('click', (evt) => {
-				evt.preventDefault();
-				evt.stopImmediatePropagation();
-
 				if (document.fullscreenElement) {
 					document.exitFullscreen();
 					screen.orientation.unlock();
@@ -122,8 +125,6 @@
 			});
 
 			reconnectButton.addEventListener('click', (evt) => {
-				evt.preventDefault();
-				evt.stopImmediatePropagation();
 				init_socket();
 			});
 		})
