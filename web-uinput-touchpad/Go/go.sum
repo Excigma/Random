@@ -1,5 +1,5 @@
-github.com/bendahl/uinput v1.7.0 h1:nA4fm8Wu8UYNOPykIZm66nkWEyvxzfmJ8YC02PM40jg=
-github.com/bendahl/uinput v1.7.0/go.mod h1:Np7w3DINc9wB83p12fTAM3DPPhFnAKP0WTXRqCQJ6Z8=
+github.com/excigma/uinput-mt-touchpad v1.7.0 h1:Z4E2MD9iipH0pG9G1asnoG/o0744+jVmIFdrojoC9QU=
+github.com/excigma/uinput-mt-touchpad v1.7.0/go.mod h1:kfLddUtmcigvz62WBvFSZiGTUFB3hLY4FeQLcFMGlaU=
 github.com/gorilla/websocket v1.5.1 h1:gmztn0JnHVt9JZquRuzLw3g4wouNVzKL15iLr/zn/QY=
 github.com/gorilla/websocket v1.5.1/go.mod h1:x3kM2JMyaluk02fnUJpQuwD2dCS5NDG2ZHL0uE0tcaY=
 golang.org/x/net v0.17.0 h1:pVaXccu2ozPjCXewfr1S7xza/zcXTity9cCdXQYSjIM=
